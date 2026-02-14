@@ -1,0 +1,161 @@
+#include <windows.h>
+#include <mutex>
+#include <filesystem>
+#include <format>
+#include <thread>
+#include <toml++/toml.hpp>
+
+#include "nya_dx9_hookbase.h"
+#include "nya_commonhooklib.h"
+#include "nya_commonmath.h"
+#include "nfsuc.h"
+#include "chloemenulib.h"
+
+bool bCareerMode = false;
+bool bChallengeSeriesMode = true;
+
+#include "util.h"
+#include "d3dhook.h"
+#include "../MostWantedTimeTrialGhosts/timetrials.h"
+#include "../MostWantedTimeTrialGhosts/verification.h"
+#include "hooks/carrender.h"
+
+#include "challengeseries.h"
+
+RideInfo* pPlayerRideInfo = nullptr;
+VehicleCustomizations* pPlayerCustomizations = nullptr;
+ISimable* VehicleConstructHooked(Sim::Param params) {
+	DLLDirSetter _setdir;
+
+	auto vehicle = (VehicleParams*)params.mSource;
+	if (vehicle->mDriverClass == DRIVER_HUMAN) {
+		pPlayerRideInfo = vehicle->mRideInfo;
+		pPlayerCustomizations = vehicle->mCustomization;
+	}
+	if (vehicle->mDriverClass == DRIVER_RACER) {
+		// copy player car for all opponents
+		auto player = GetLocalPlayerVehicle();
+		vehicle->mPerformanceMatch = nullptr;
+		vehicle->mVehicleAttrib = Attrib::Instance(Attrib::FindCollection(Attrib::StringHash32("pvehicle"), player->GetVehicleKey()), 0);
+		vehicle->mRideInfo = pPlayerRideInfo;
+		vehicle->mCustomization = pPlayerCustomizations;
+
+		// do a config save in every loading screen
+		DoConfigSave();
+	}
+	return PVehicle::Construct(params);
+}
+
+auto OnEventFinished_orig = (void(*)(ISimable*))nullptr;
+void __thiscall OnEventFinished(ISimable* a1) {
+	OnEventFinished_orig(a1);
+
+	if (a1 == GetLocalPlayerSimable()) {
+		DLLDirSetter _setdir;
+		OnFinishRace();
+
+		// do a config save when finishing a race
+		DoConfigSave();
+	}
+}
+
+auto OnRestartRace_orig = (void(__thiscall*)(void*))nullptr;
+void __thiscall OnRestartRace(void* a1) {
+	OnRestartRace_orig(a1);
+	OnRaceRestart();
+}
+
+void MainLoop() {
+	static double simTime = -1;
+
+	if (!Sim::Exists() || Sim::GetState() != Sim::STATE_ACTIVE) {
+		simTime = -1;
+		return;
+	}
+	if (simTime == Sim::GetTime()) return;
+	simTime = Sim::GetTime();
+
+	DLLDirSetter _setdir;
+	TimeTrialLoop();
+
+	auto cars = GetActiveVehicles();
+	for (auto& car : cars) {
+		car->SetDraftZoneModifier(0.0);
+	}
+
+	if (pEventToStart) {
+		pEventToStart->SetupEvent();
+		pEventToStart = nullptr;
+	}
+}
+
+void RenderLoop() {
+	VerifyTimers();
+	TimeTrialRenderLoop();
+}
+
+BOOL WINAPI DllMain(HINSTANCE, DWORD fdwReason, LPVOID) {
+	switch( fdwReason ) {
+		case DLL_PROCESS_ATTACH: {
+			if (NyaHookLib::GetEntryPoint() != 0x4AEC55) {
+				MessageBoxA(nullptr, "Unsupported game version! Make sure you're using v1.0.0.1 (.exe size of 10584064 or 10589456 bytes)", "nya?!~", MB_ICONERROR);
+				return TRUE;
+			}
+
+			gDLLPath = std::filesystem::current_path();
+			GetCurrentDirectoryW(MAX_PATH, gDLLDir);
+
+			ChloeMenuLib::RegisterMenu("Time Trial Ghosts", &DebugMenu);
+
+			NyaHooks::SimServiceHook::Init();
+			NyaHooks::SimServiceHook::aFunctions.push_back(MainLoop);
+			NyaHooks::LateInitHook::Init();
+			NyaHooks::LateInitHook::aPreFunctions.push_back(FileIntegrity::VerifyGameFiles);
+			NyaHooks::LateInitHook::aFunctions.push_back([]() {
+				NyaHooks::PlaceD3DHooks();
+				//NyaHooks::WorldServiceHook::Init();
+				//NyaHooks::WorldServiceHook::aPreFunctions.push_back(CollectPlayerPos);
+				//NyaHooks::WorldServiceHook::aPostFunctions.push_back(CheckPlayerPos);
+				NyaHooks::D3DEndSceneHook::aFunctions.push_back(D3DHookMain);
+				NyaHooks::D3DResetHook::aFunctions.push_back(OnD3DReset);
+
+				NyaHookLib::Patch<double>(0xBE4208, 1.0 / 120.0); // set sim framerate
+				NyaHookLib::Patch<float>(0xC23F94, 1.0 / 120.0); // set sim max framerate
+
+				ApplyVerificationPatches();
+
+				*(void**)0xDE6F30 = (void*)&VehicleConstructHooked;
+				//if (GetModuleHandleA("NFSUCExtraOptions.asi") || std::filesystem::exists("NFSUCExtraOptionsSettings.ini") || std::filesystem::exists("scripts/NFSUCExtraOptionsSettings.ini")) {
+				//	MessageBoxA(nullptr, "Potential unfair advantage detected! Please remove NFSUCExtraOptions from your game before using this mod.", "nya?!~", MB_ICONERROR);
+				//	exit(0);
+				//}
+			});
+
+			OnEventFinished_orig = (void(*)(ISimable*))(*(uint32_t*)(0xBC0325 + 1));
+			NyaHookLib::Patch(0xBC0325 + 1, &OnEventFinished);
+
+			OnRestartRace_orig = (void(__thiscall*)(void*))NyaHookLib::PatchRelative(NyaHookLib::CALL, 0x563D6B, &OnRestartRace);
+			NyaHookLib::PatchRelative(NyaHookLib::CALL, 0x5A6EFA, &OnRestartRace);
+
+			// todo disable drafting
+			//NyaHookLib::Patch<uint8_t>(0x477155, 0xEB);
+			//NyaHookLib::Patch<uint8_t>(0x4773BF, 0xEB);
+			//NyaHookLib::Patch<uint8_t>(0x4773DF, 0xEB);
+			//NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x477440, 0x4775EB);
+			//NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x477615, 0x4776C8);
+			//NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x477706, 0x4778B3);
+			//NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x4771E0, 0x4773A5);
+
+			SetRacerAIEnabled(false);
+
+			ApplyCarRenderHooks();
+
+			DoConfigLoad();
+
+			WriteLog("Mod initialized");
+		} break;
+		default:
+			break;
+	}
+	return TRUE;
+}
