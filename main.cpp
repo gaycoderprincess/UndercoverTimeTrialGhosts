@@ -17,10 +17,9 @@ bool bChallengeSeriesMode = false;
 #include "util.h"
 #include "d3dhook.h"
 #include "../MostWantedTimeTrialGhosts/timetrials.h"
-#include "../MostWantedTimeTrialGhosts/verification.h"
 #include "hooks/carrender.h"
-
 #include "challengeseries.h"
+#include "../MostWantedTimeTrialGhosts/verification.h"
 
 uint32_t PlayerCarType = 0;
 ISimable* VehicleConstructHooked(Sim::Param params) {
@@ -148,6 +147,7 @@ BOOL WINAPI DllMain(HINSTANCE, DWORD fdwReason, LPVOID) {
 				NyaHookLib::Patch<float>(0xC23F94, 1.0 / 120.0); // set sim max framerate
 
 				ApplyVerificationPatches();
+				gUndercoverModData.Check();
 
 				*(void**)0xDE6F30 = (void*)&VehicleConstructHooked;
 				if (GetModuleHandleA("ZMenuUndercover.asi") || GetModuleHandleA("assimp-vc141-mt.dll")) {

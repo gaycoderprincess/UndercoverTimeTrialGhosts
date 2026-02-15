@@ -161,7 +161,7 @@ public:
 	}
 };
 
-std::vector<ChallengeSeriesEvent> aNewChallengeSeries = {
+std::vector<ChallengeSeriesEvent> aVanillaChallengeSeries = {
 	ChallengeSeriesEvent("E007", "ce_240sx"),
 	ChallengeSeriesEvent("E650", "racer_170"),
 	ChallengeSeriesEvent("E013", "zack"),
@@ -178,21 +178,39 @@ std::vector<ChallengeSeriesEvent> aNewChallengeSeries = {
 	ChallengeSeriesEvent("E654", "rose"),
 };
 
+std::vector<ChallengeSeriesEvent> aReformedChallengeSeries = {
+	ChallengeSeriesEvent("E007", "ce_240sx"),
+	ChallengeSeriesEvent("E650", "racer_170"),
+	ChallengeSeriesEvent("E013", "zack"),
+	ChallengeSeriesEvent("E008", "diecast_911gt2"),
+	ChallengeSeriesEvent("E136", "m09"),
+	ChallengeSeriesEvent("E009", "pinkslip_racer_005"),
+	ChallengeSeriesEvent("E017", "chase"),
+	ChallengeSeriesEvent("E203", "pinkslip_racer_020"),
+	ChallengeSeriesEvent("E124", "nickel", 1),
+	ChallengeSeriesEvent("E260", "nfsdotcom"),
+	ChallengeSeriesEvent("E374", "gmac"),
+	ChallengeSeriesEvent("E501", "ce_ccx", 1),
+	ChallengeSeriesEvent("E298", "pinkslip_racer_024", 2),
+	ChallengeSeriesEvent("E654", "rose"),
+};
+auto aNewChallengeSeries = &aVanillaChallengeSeries;
+
 ChallengeSeriesEvent* GetChallengeEvent(uint32_t hash) {
-	for (auto& event : aNewChallengeSeries) {
+	for (auto& event : *aNewChallengeSeries) {
 		if (!GRaceDatabase::GetRaceFromHash(GRaceDatabase::mObj, Attrib::StringHash32(event.sEventName.c_str()))) {
 			MessageBoxA(0, std::format("Failed to find event {}", event.sEventName).c_str(), "nya?!~", MB_ICONERROR);
 			exit(0);
 		}
 	}
-	for (auto& event : aNewChallengeSeries) {
+	for (auto& event : *aNewChallengeSeries) {
 		if (Attrib::StringHash32(event.sEventName.c_str()) == hash) return &event;
 	}
 	return nullptr;
 }
 
 ChallengeSeriesEvent* GetChallengeEvent(const std::string& str) {
-	for (auto& event : aNewChallengeSeries) {
+	for (auto& event : *aNewChallengeSeries) {
 		if (event.sEventName == str) return &event;
 	}
 	return nullptr;
@@ -204,7 +222,7 @@ void OnChallengeSeriesEventPB() {
 
 ChallengeSeriesEvent* pEventToStart = nullptr;
 void ChallengeSeriesMenu() {
-	for (auto& event : aNewChallengeSeries) {
+	for (auto& event : *aNewChallengeSeries) {
 		auto pb = event.GetPBGhost();
 		auto target = event.GetTargetGhost();
 		auto optionName = event.sEventName; // todo
