@@ -9,6 +9,8 @@ void* __thiscall GetRaceKeyHooked(Attrib::Instance* instance, uint32_t attribute
 	return &key;
 }
 
+class ChallengeSeriesEvent;
+ChallengeSeriesEvent* pSelectedChallengeSeriesEvent = nullptr;
 class ChallengeSeriesEvent {
 public:
 	std::string sEventName;
@@ -36,6 +38,25 @@ public:
 		PBGhost = {};
 	}
 
+	std::string GetCarNameForGhost() const {
+		//if (!Attrib::FindCollection(Attrib::StringHash32("presetride"), Attrib::StringHash32(sCarPreset.c_str()))) return sCarPreset;
+		//auto preset = Attrib::Gen::presetride(Attrib::StringHash32(sCarPreset.c_str()), 0);
+		//auto pvehicle = Attrib::Gen::pvehicle(preset.GetLayout()->PresetCar.hash, 0);
+		//return pvehicle.GetLayout()->CollectionName;
+
+		auto preset = Attrib::FindCollection(Attrib::StringHash32("presetride"), Attrib::StringHash32(sCarPreset.c_str()));
+		if (!preset) return sCarPreset;
+
+		auto a = (uint32_t*)Attrib::Collection::GetData(preset, 0xF833C06F, 0);
+		auto carHash = a[1];
+		auto pvehicle = Attrib::Gen::pvehicle(carHash, 0);
+		return pvehicle.GetLayout()->CollectionName;
+
+		//auto pvehicle = Attrib::FindCollection(Attrib::StringHash32("pvehicle"), carHash);
+		//if (!pvehicle) return sCarPreset;
+		//return pvehicle->
+	}
+
 	tReplayGhost GetPBGhost() {
 		while (bPBGhostLoading) { Sleep(0); }
 
@@ -45,7 +66,7 @@ public:
 		tReplayGhost temp;
 		auto bak = bChallengeSeriesMode;
 		bChallengeSeriesMode = true;
-		LoadPB(&temp, sCarPreset, sEventName, GetLapCount(), 0, nullptr);
+		LoadPB(&temp, GetCarNameForGhost(), sEventName, GetLapCount(), 0, nullptr);
 		bChallengeSeriesMode = bak;
 		temp.aTicks.clear(); // just in case
 		PBGhost = temp;
@@ -62,7 +83,7 @@ public:
 		tReplayGhost targetTime;
 		auto bak = bChallengeSeriesMode;
 		bChallengeSeriesMode = true;
-		auto times = CollectReplayGhosts(sCarPreset, sEventName, GetLapCount(), nullptr);
+		auto times = CollectReplayGhosts(GetCarNameForGhost(), sEventName, GetLapCount(), nullptr);
 		bChallengeSeriesMode = bak;
 		if (!times.empty()) {
 			times[0].aTicks.clear(); // just in case
@@ -82,39 +103,35 @@ public:
 		auto race = GRaceDatabase::GetRaceFromHash(GRaceDatabase::mObj, Attrib::StringHash32(sEventName.c_str()));
 		nCurrentEventKey = race->GetCollectionKey();
 
+		pSelectedChallengeSeriesEvent = this;
+
+#ifdef RACESTART_HUB
+		auto eventKey = race->GetCollectionKey();
+
+		// the hub is l*a and doesn't load any of this so all it does is break the parts of the game that do
+		//race->mIndex->mNumLaps = GRaceParameters::GetIsLoopingRace(race) ? GetLapCount() : 1;
+		race->mIndex->mPlayerCarTypeHash = Attrib::StringHash32(sCarPreset.c_str());
+		race->mIndex->mFlags |= GRaceIndexData::kFlag_UsePresetRide;
+
+		IGameStatus::mInstance->SetRoaming();
+		GEvent::Cleanup(GEvent::sInstance);
+		GHub::StartEventFromKey(GHub::sCurrentHub, eventKey);
+		GHub::sCurrentHub->mCurrentEventKey = eventKey;
+		GHub::sCurrentHub->mCurrentEventHash = race->GetEventHash();
+		GHub::sCurrentHub->mRequestedEventKey = eventKey;
+		GHub::sCurrentHub->mSelectedEventIndex = 0;
+		GHub::sCurrentHub->mCurrentEventType = race->GetEventType();
+		GHub::StartCurrentEvent(GHub::sCurrentHub);
+		GEvent::Prepare(GEvent::sInstance);
+		IGameStatus::mInstance->EventLaunched();
+#elif RACESTART_CUSTOMRACE
 		auto custom = GRaceDatabase::AllocCustomRace(GRaceDatabase::mObj, race);
 		custom->mIndex->mNumLaps = GRaceParameters::GetIsLoopingRace(race) ? GetLapCount() : 1;
 		custom->mIndex->mPlayerCarTypeHash = Attrib::StringHash32(sCarPreset.c_str());
-		//custom->mIndex->mFlags &= ~GRaceIndexData::kFlag_UsePresetRide;
 		custom->mIndex->mFlags |= GRaceIndexData::kFlag_UsePresetRide;
-		//SkipFENumAICars = bChallengesOneGhostOnly ? 1 : 7;
-		//GRaceDatabase::mObj->SetStartupRace(custom, GRace::kRaceContext_QuickRace);
-		//GameFlowManager::LoadTrack(&TheGameFlowManager);
-
-		/*IGameStatus::mInstance->SetRoaming();
-		IGameStatus::mInstance->ToggleShortMissionIntroNIS(true);
-		//auto eventKey = *(uint32_t*)Attrib::Instance::GetAttributePointer(race->mRaceRecord, Attrib::StringHash32("Name"), 0);
-		//auto eventKey = race->mRaceRecord->mCollection->mKey;
-		//auto eventKey = Attrib::StringHash32("race_bin_career/E007");
-		auto eventKey = GHub::GetEventKey(GHub::sCurrentHub, 0);
-		WriteLog(std::format("{:X}", eventKey));
-		auto event = GRaceDatabase::GetRaceFromKey(GRaceDatabase::mObj, eventKey);
-		WriteLog(std::format("{}", GRaceParameters::GetEventID(event)));
-		event->BlockUntilLoaded();
-		GHub::StartEventFromKey(GHub::sCurrentHub, eventKey);
-		GHub::sCurrentHub->mCurrentEventKey = eventKey;
-		GHub::sCurrentHub->mCurrentEventHash = event->GetEventHash();
-		GHub::sCurrentHub->mRequestedEventKey = eventKey;
-		GHub::sCurrentHub->mSelectedEventIndex = 0;
-		GHub::sCurrentHub->mCurrentEventType = event->GetEventType();
-		GHub::StartCurrentEvent(GHub::sCurrentHub);
-		GHub::sCurrentHub->SetupPlayerCar({0xFFFFFFFF}, 0);
-		GHub::sCurrentHub->UpdateCars();
-		//GEvent::Prepare(GEvent::sInstance);
-		IGameStatus::mInstance->EventLaunched();*/
 
 		IGameStatus::mInstance->SetRoaming();
-		IGameStatus::mInstance->ToggleShortMissionIntroNIS(true);
+		GEvent::Cleanup(GEvent::sInstance);
 		if (!custom->GetActivity()) {
 			GRaceCustom::CreateRaceActivity(custom);
 		}
@@ -124,11 +141,10 @@ public:
 			GEvent::Prepare(GEvent::sInstance);
 			GManager::StartRaceActivityFromInGame(GManager::mObj, custom);
 			IGameStatus::mInstance->EventLaunched();
-
-			//if (GRaceStatus::fObj) {
-			//	GRaceStatus::fObj->AddSimablePlayer(GetLocalPlayerSimable());
-			//}
 		}
+#else
+		static_assert(0);
+#endif
 
 		//IGameStatus::mInstance->SetRoaming();
 		//IGameStatus::mInstance->ToggleShortMissionIntroNIS(true);
@@ -164,9 +180,7 @@ ChallengeSeriesEvent* GetChallengeEvent(const std::string& str) {
 }
 
 void OnChallengeSeriesEventPB() {
-	auto event = GetChallengeEvent(GRaceParameters::GetEventID(GRaceStatus::fObj->mRaceParms));
-	if (!event) return;
-	event->ClearPBGhost();
+	pSelectedChallengeSeriesEvent->ClearPBGhost();
 }
 
 ChallengeSeriesEvent* pEventToStart = nullptr;

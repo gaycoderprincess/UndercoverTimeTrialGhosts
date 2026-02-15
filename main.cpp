@@ -91,6 +91,10 @@ void MainLoop() {
 	DLLDirSetter _setdir;
 	TimeTrialLoop();
 
+	if (pSelectedChallengeSeriesEvent && GRaceStatus::fObj && !GRaceStatus::fObj->mRaceParms && GRaceParameters::GetEventID(GRaceStatus::fObj->mRaceParms) != pSelectedChallengeSeriesEvent->sEventName) {
+		bChallengeSeriesMode = false;
+	}
+
 	auto cars = GetActiveVehicles();
 	for (auto& car : cars) {
 		car->SetDraftZoneModifier(0.0);
@@ -105,6 +109,19 @@ void MainLoop() {
 void RenderLoop() {
 	VerifyTimers();
 	TimeTrialRenderLoop();
+}
+
+void* __thiscall GetCollectionValuesHooked(Attrib::Instance* instance, uint32_t attributeKey, uint32_t index) {
+	if (bChallengeSeriesMode && pSelectedChallengeSeriesEvent) {
+		static uint32_t tmp1 = 1;
+		static const char* tmpCar = nullptr;
+		tmpCar = pSelectedChallengeSeriesEvent->sCarPreset.c_str();
+		if (attributeKey == 0x9593A322) return &tmp1; // UsePresetRide
+		if (attributeKey == 0x416A8409) return &tmpCar; // PresetRide
+		if (attributeKey == 0xADE2F778) return &tmpCar; // PresetRide
+	}
+	if (!instance->mCollection) return nullptr;
+	return Attrib::Collection::GetData(instance->mCollection, attributeKey, index);
 }
 
 BOOL WINAPI DllMain(HINSTANCE, DWORD fdwReason, LPVOID) {
@@ -156,6 +173,7 @@ BOOL WINAPI DllMain(HINSTANCE, DWORD fdwReason, LPVOID) {
 
 			NyaHookLib::PatchRelative(NyaHookLib::CALL, 0x6424DD, &GetNumRacesHooked);
 			NyaHookLib::PatchRelative(NyaHookLib::CALL, 0x6424F7, &GetRaceKeyHooked);
+			NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x4649B0, &GetCollectionValuesHooked);
 
 			// disable drafting
 			NyaHookLib::Patch<uint8_t>(0x6FD1B8, 0xEB);
