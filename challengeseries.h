@@ -57,34 +57,52 @@ public:
 	}
 
 	void SetupEvent() {
-		// todo
-
-		/*if (TheGameFlowManager.CurrentGameFlowState != GAMEFLOW_STATE_RACING) return;
+		if (TheGameFlowManager.CurrentGameFlowState != GAMEFLOW_STATE_RACING) return;
 
 		auto race = GRaceDatabase::GetRaceFromHash(GRaceDatabase::mObj, Attrib::StringHash32(sEventName.c_str()));
 
-		RaceParameters::InitWithDefaults(&TheRaceParameters);
-		SkipFETrackNumber = TheRaceParameters.TrackNumber = GetTrackID();
-		SkipFENumAICars = bChallengesOneGhostOnly ? 1 : 7;
-		SkipFERaceID = sEventName.c_str();
-		SkipFENumLaps = GRaceParameters::GetIsLoopingRace(race) ? GetLapCount() : 1;
-		SkipFEPlayerCar = sCarPreset.c_str();
-		if (IsSpeedEvent()) {
-			SkipFEPlayerBluePrintType = BLUEPRINT_SPEED_CHALLENGE;
-		}
-		else if (IsDriftEvent()) {
-			SkipFEPlayerBluePrintType = BLUEPRINT_DRIFT;
-		}
-		else {
-			SkipFEPlayerBluePrintType = BLUEPRINT_GRIP;
-		}
+		auto custom = GRaceDatabase::AllocCustomRace(GRaceDatabase::mObj, race);
+		custom->mIndex->mNumLaps = GRaceParameters::GetIsLoopingRace(race) ? GetLapCount() : 1;
+		custom->mIndex->mPlayerCarTypeHash = Attrib::StringHash32(sCarPreset.c_str());
+		//custom->mIndex->mFlags &= ~GRaceIndexData::kFlag_UsePresetRide;
+		custom->mIndex->mFlags |= GRaceIndexData::kFlag_UsePresetRide;
+		//SkipFENumAICars = bChallengesOneGhostOnly ? 1 : 7;
+		//GRaceDatabase::mObj->SetStartupRace(custom, GRace::kRaceContext_QuickRace);
+		//GameFlowManager::LoadTrack(&TheGameFlowManager);
 
-		GameFlowManager::ReloadTrack(&TheGameFlowManager);*/
+		IGameStatus::mInstance->SetRoaming();
+		IGameStatus::mInstance->ToggleShortMissionIntroNIS(true);
+		auto eventKey = *(uint32_t*)Attrib::Instance::GetAttributePointer(custom->mRaceRecord, Attrib::StringHash32("Name"), 0);
+		GHub::StartEventFromKey(GHub::sCurrentHub, eventKey);
+		GHub::StartCurrentEvent(GHub::sCurrentHub);
+		IGameStatus::mInstance->EventLaunched();
+
+		/*IGameStatus::mInstance->SetRoaming();
+		IGameStatus::mInstance->ToggleShortMissionIntroNIS(true);
+		if (!custom->GetActivity()) {
+			GRaceCustom::CreateRaceActivity(custom);
+		}
+		if (custom->GetActivity()) {
+			GManager::ConnectRuntimeInstances(GManager::mObj);
+			GManager::StartRaceActivityFromInGame(GManager::mObj, custom);
+			IGameStatus::mInstance->EventLaunched();
+
+			//if (GRaceStatus::fObj) {
+			//	GRaceStatus::fObj->AddSimablePlayer(GetLocalPlayerSimable());
+			//}
+		}*/
+
+		//IGameStatus::mInstance->SetRoaming();
+		//IGameStatus::mInstance->ToggleShortMissionIntroNIS(true);
+		//GHub::StartEventFromKey(GHub::sCurrentHub, Attrib::StringHash32(sEventName.c_str()));
+		//GHub::StartCurrentEvent(GHub::sCurrentHub);
+		//IGameStatus::mInstance->EventLaunched();
 	}
 };
 
 std::vector<ChallengeSeriesEvent> aNewChallengeSeries = {
-	ChallengeSeriesEvent("1.gr.1", "player_d_day", 2),
+	ChallengeSeriesEvent("E007", "ce_240sx", 2),
+	//ChallengeSeriesEvent("race_bin_career/E007", "ce_240sx", 2),
 };
 
 ChallengeSeriesEvent* GetChallengeEvent(uint32_t hash) {

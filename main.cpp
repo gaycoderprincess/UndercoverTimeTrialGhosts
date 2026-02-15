@@ -137,6 +137,8 @@ BOOL WINAPI DllMain(HINSTANCE, DWORD fdwReason, LPVOID) {
 			OnRestartRace_orig = (void(__thiscall*)(void*))NyaHookLib::PatchRelative(NyaHookLib::CALL, 0x563D6B, &OnRestartRace);
 			NyaHookLib::PatchRelative(NyaHookLib::CALL, 0x5A6EFA, &OnRestartRace);
 
+			NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x4553C7, 0x4553D9); // disable traffic
+
 			// todo disable drafting
 			//NyaHookLib::Patch<uint8_t>(0x477155, 0xEB);
 			//NyaHookLib::Patch<uint8_t>(0x4773BF, 0xEB);
