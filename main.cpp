@@ -101,7 +101,7 @@ void MainLoop() {
 	}
 
 	for (auto& skill : GMW2Game::mObj->mRewardModifiers) {
-		skill = 1.0;
+		skill = 0.25;
 	}
 
 	if (pEventToStart) {

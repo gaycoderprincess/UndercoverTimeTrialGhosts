@@ -96,7 +96,6 @@ public:
 
 	void SetupEvent() {
 		if (TheGameFlowManager.CurrentGameFlowState != GAMEFLOW_STATE_RACING) return;
-		if (IGameStatus::mInstance->IsRacing()) return;
 
 		bChallengeSeriesMode = true;
 
@@ -108,10 +107,18 @@ public:
 #ifdef RACESTART_HUB
 		auto eventKey = race->GetCollectionKey();
 
-		// the hub is l*a and doesn't load any of this so all it does is break the parts of the game that do
-		//race->mIndex->mNumLaps = GRaceParameters::GetIsLoopingRace(race) ? GetLapCount() : 1;
+		race->mIndex->mNumLaps = GRaceParameters::GetIsLoopingRace(race) ? GetLapCount() : 1;
 		race->mIndex->mPlayerCarTypeHash = Attrib::StringHash32(sCarPreset.c_str());
 		race->mIndex->mFlags |= GRaceIndexData::kFlag_UsePresetRide;
+		race->BlockUntilLoaded();
+
+		if (auto addr = (char**)Attrib::Instance::GetAttributePointer(race->mRaceRecord, Attrib::StringHash32("IntroMovie"), 0)) {
+			*addr = nullptr;
+		}
+
+		if (auto addr = (int*)Attrib::Instance::GetAttributePointer(race->mRaceRecord, Attrib::StringHash32("NumLaps"), 0)) {
+			*addr = GetLapCount();
+		}
 
 		IGameStatus::mInstance->SetRoaming();
 		GEvent::Cleanup(GEvent::sInstance);
@@ -155,8 +162,20 @@ public:
 };
 
 std::vector<ChallengeSeriesEvent> aNewChallengeSeries = {
-	ChallengeSeriesEvent("E007", "ce_240sx", 2),
-	ChallengeSeriesEvent("E650", "racer_170", 2),
+	ChallengeSeriesEvent("E007", "ce_240sx"),
+	ChallengeSeriesEvent("E650", "racer_170"),
+	ChallengeSeriesEvent("E013", "zack"),
+	ChallengeSeriesEvent("E008", "diecast_911gt2"),
+	ChallengeSeriesEvent("E136", "m09"),
+	ChallengeSeriesEvent("E009", "pinkslip_racer_005"),
+	ChallengeSeriesEvent("E203", "pinkslip_racer_020"),
+	ChallengeSeriesEvent("E124", "nickel", 1),
+	ChallengeSeriesEvent("E260", "nfsdotcom"),
+	ChallengeSeriesEvent("E374", "gmac"),
+	ChallengeSeriesEvent("E501", "ce_ccx", 1),
+	ChallengeSeriesEvent("E298", "pinkslip_racer_024"),
+	ChallengeSeriesEvent("E230", "rose"),
+	//chase
 };
 
 ChallengeSeriesEvent* GetChallengeEvent(uint32_t hash) {
