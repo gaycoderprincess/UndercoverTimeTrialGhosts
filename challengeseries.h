@@ -218,3 +218,15 @@ void ChallengeSeriesMenu() {
 		}
 	}
 }
+
+const char* __thiscall GetPresetRideHooked(GRaceParameters* pThis) {
+	auto event = GetChallengeEvent(pThis->GetEventID(pThis));
+	if (!event) return nullptr;
+	return event->sCarPreset.c_str();
+}
+
+void ApplyChallengeSeriesHooks() {
+	NyaHookLib::PatchRelative(NyaHookLib::CALL, 0x6424DD, &GetNumRacesHooked);
+	NyaHookLib::PatchRelative(NyaHookLib::CALL, 0x6424F7, &GetRaceKeyHooked);
+	NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x63F550, &GetPresetRideHooked);
+}

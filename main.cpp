@@ -100,6 +100,10 @@ void MainLoop() {
 		car->SetDraftZoneModifier(0.0);
 	}
 
+	for (auto& skill : GMW2Game::mObj->mRewardModifiers) {
+		skill = 1.0;
+	}
+
 	if (pEventToStart) {
 		pEventToStart->SetupEvent();
 		pEventToStart = nullptr;
@@ -109,19 +113,6 @@ void MainLoop() {
 void RenderLoop() {
 	VerifyTimers();
 	TimeTrialRenderLoop();
-}
-
-void* __thiscall GetCollectionValuesHooked(Attrib::Instance* instance, uint32_t attributeKey, uint32_t index) {
-	if (bChallengeSeriesMode && pSelectedChallengeSeriesEvent) {
-		static uint32_t tmp1 = 1;
-		static const char* tmpCar = nullptr;
-		tmpCar = pSelectedChallengeSeriesEvent->sCarPreset.c_str();
-		if (attributeKey == 0x9593A322) return &tmp1; // UsePresetRide
-		if (attributeKey == 0x416A8409) return &tmpCar; // PresetRide
-		if (attributeKey == 0xADE2F778) return &tmpCar; // PresetRide
-	}
-	if (!instance->mCollection) return nullptr;
-	return Attrib::Collection::GetData(instance->mCollection, attributeKey, index);
 }
 
 BOOL WINAPI DllMain(HINSTANCE, DWORD fdwReason, LPVOID) {
@@ -171,10 +162,6 @@ BOOL WINAPI DllMain(HINSTANCE, DWORD fdwReason, LPVOID) {
 
 			NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x4553C7, 0x4553D9); // disable traffic
 
-			NyaHookLib::PatchRelative(NyaHookLib::CALL, 0x6424DD, &GetNumRacesHooked);
-			NyaHookLib::PatchRelative(NyaHookLib::CALL, 0x6424F7, &GetRaceKeyHooked);
-			NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x4649B0, &GetCollectionValuesHooked);
-
 			// disable drafting
 			NyaHookLib::Patch<uint8_t>(0x6FD1B8, 0xEB);
 			NyaHookLib::Patch<uint8_t>(0x73E9FC, 0xEB);
@@ -186,6 +173,8 @@ BOOL WINAPI DllMain(HINSTANCE, DWORD fdwReason, LPVOID) {
 			SetRacerAIEnabled(false);
 
 			ApplyCarRenderHooks();
+
+			ApplyChallengeSeriesHooks();
 
 			DoConfigLoad();
 
