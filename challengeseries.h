@@ -179,20 +179,22 @@ std::vector<ChallengeSeriesEvent> aVanillaChallengeSeries = {
 };
 
 std::vector<ChallengeSeriesEvent> aReformedChallengeSeries = {
-	ChallengeSeriesEvent("E007", "ce_240sx"),
-	ChallengeSeriesEvent("E650", "racer_170"),
-	ChallengeSeriesEvent("E013", "zack"),
-	ChallengeSeriesEvent("E008", "diecast_911gt2"),
-	ChallengeSeriesEvent("E136", "m09"),
-	ChallengeSeriesEvent("E009", "pinkslip_racer_005"),
-	ChallengeSeriesEvent("E017", "chase"),
-	ChallengeSeriesEvent("E203", "pinkslip_racer_020"),
-	ChallengeSeriesEvent("E124", "nickel", 1),
-	ChallengeSeriesEvent("E260", "nfsdotcom"),
-	ChallengeSeriesEvent("E374", "gmac"),
-	ChallengeSeriesEvent("E501", "ce_ccx", 1),
-	ChallengeSeriesEvent("E298", "pinkslip_racer_024", 2),
-	ChallengeSeriesEvent("E654", "rose"),
+	ChallengeSeriesEvent("E007", "starter_eclipse"),
+	ChallengeSeriesEvent("E650", "e470_pinkslip"),
+	ChallengeSeriesEvent("E013", "bonus_zack"),
+	ChallengeSeriesEvent("E008", "bonus_cs_gt3"),
+	ChallengeSeriesEvent("E136", "bonus_evox"),
+	ChallengeSeriesEvent("E009", "e013_pinkslip2"),
+	ChallengeSeriesEvent("E104", "bonus_dominator"),
+	ChallengeSeriesEvent("E203", "e124_pinkslip2"),
+	ChallengeSeriesEvent("E124", "bonus_nickel", 1),
+	ChallengeSeriesEvent("E260", "m30"),
+	ChallengeSeriesEvent("E374", "m33"),
+	ChallengeSeriesEvent("E501", "bonus_rose", 1),
+	ChallengeSeriesEvent("E298", "m32", 2),
+	ChallengeSeriesEvent("E654", "m10"),
+	// e124_pinkslip4 supra
+	// starter_civic
 };
 auto aNewChallengeSeries = &aVanillaChallengeSeries;
 
