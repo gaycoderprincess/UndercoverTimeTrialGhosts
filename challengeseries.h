@@ -191,8 +191,8 @@ std::vector<ChallengeSeriesEvent> aReformedChallengeSeries = {
 	ChallengeSeriesEvent("E260", "m30"),
 	ChallengeSeriesEvent("E374", "m33"),
 	ChallengeSeriesEvent("E501", "bonus_rose", 1),
-	ChallengeSeriesEvent("E298", "m32", 2),
-	ChallengeSeriesEvent("E654", "m10"),
+	ChallengeSeriesEvent("E298", "m28", 2),
+	ChallengeSeriesEvent("E654", "bonus_370z"),
 	// e124_pinkslip4 supra
 	// starter_civic
 };
