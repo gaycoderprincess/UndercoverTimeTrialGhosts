@@ -182,14 +182,14 @@ NyaMat4x4 WorldToRenderMatrix(NyaMat4x4 world) {
 }
 
 // todo
-/*Camera* GetLocalPlayerCamera() {
+Camera* GetLocalPlayerCamera() {
 	return eViews[EVIEW_PLAYER1].pCamera;
 }
 
 // view to world
 NyaMat4x4 PrepareCameraMatrix(Camera* pCamera) {
 	return pCamera->CurrentKey.Matrix.Invert();
-}*/
+}
 
 GRacerInfo* GetRacerInfoFromHandle(ISimable* handle) {
 	return GRaceStatus::fObj->GetRacerInfo(handle);
