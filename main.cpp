@@ -22,23 +22,33 @@ bool bChallengeSeriesMode = false;
 
 #include "challengeseries.h"
 
-RideInfo* pPlayerRideInfo = nullptr;
-VehicleCustomizations* pPlayerCustomizations = nullptr;
+uint32_t PlayerCarType = 0;
+VehicleCustomizations PlayerCustomizations = {};
 ISimable* VehicleConstructHooked(Sim::Param params) {
 	DLLDirSetter _setdir;
 
 	auto vehicle = (VehicleParams*)params.mSource;
 	if (vehicle->mDriverClass == DRIVER_HUMAN) {
-		pPlayerRideInfo = vehicle->mRideInfo;
-		pPlayerCustomizations = vehicle->mCustomization;
+		PlayerCarType = vehicle->mRideInfo->Type;
+		PlayerCustomizations = vehicle->mCustomization ? *vehicle->mCustomization : VehicleCustomizations();
 	}
 	if (vehicle->mDriverClass == DRIVER_RACER) {
+		static RideInfo info;
+		RideInfo::Init(&info, PlayerCarType, CarRenderUsage_AIRacer, 0, 0, 0, 0);
+		RideInfo::SetStockParts(&info);
+		//VehicleCustomizations::WriteTo(&PlayerCustomizations, &info);
+
 		// copy player car for all opponents
 		auto player = GetLocalPlayerVehicle();
 		vehicle->mPerformanceMatch = nullptr;
 		vehicle->mVehicleAttrib = Attrib::Instance(Attrib::FindCollection(Attrib::StringHash32("pvehicle"), player->GetVehicleKey()), 0);
-		vehicle->mRideInfo = pPlayerRideInfo;
-		vehicle->mCustomization = pPlayerCustomizations;
+		vehicle->mRideInfo = &info;
+		//vehicle->mCustomization = &PlayerCustomizations;
+		vehicle->mCustomization = nullptr;
+		vehicle->mSkinKey = 0;
+		vehicle->mPresetKey = 0;
+		vehicle->mVehicleKey = player->GetVehicleKey();
+		vehicle->mVehicleResource.mCarType = PlayerCarType;
 
 		// do a config save in every loading screen
 		DoConfigSave();
