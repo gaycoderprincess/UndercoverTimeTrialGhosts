@@ -104,6 +104,10 @@ void MainLoop() {
 		skill = 0.25;
 	}
 
+	auto profile = Database::UserProfile::spUserProfiles[0];
+	profile->mOptionsSettings.TheGameplaySettings.JumpCam = false;
+	profile->mOptionsSettings.TheGameplaySettings.HighlightCam = 0;
+
 	if (pEventToStart) {
 		pEventToStart->SetupEvent();
 		pEventToStart = nullptr;
@@ -161,6 +165,8 @@ BOOL WINAPI DllMain(HINSTANCE, DWORD fdwReason, LPVOID) {
 			NyaHookLib::PatchRelative(NyaHookLib::CALL, 0x5A6EFA, &OnRestartRace);
 
 			NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x4553C7, 0x4553D9); // disable traffic
+
+			NyaHookLib::Patch<uint8_t>(0x68542D, 0xEB); // disable jump cam
 
 			// disable drafting
 			NyaHookLib::Patch<uint8_t>(0x6FD1B8, 0xEB);

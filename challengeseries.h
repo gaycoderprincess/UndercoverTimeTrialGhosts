@@ -168,14 +168,14 @@ std::vector<ChallengeSeriesEvent> aNewChallengeSeries = {
 	ChallengeSeriesEvent("E008", "diecast_911gt2"),
 	ChallengeSeriesEvent("E136", "m09"),
 	ChallengeSeriesEvent("E009", "pinkslip_racer_005"),
+	ChallengeSeriesEvent("E017", "chase"),
 	ChallengeSeriesEvent("E203", "pinkslip_racer_020"),
 	ChallengeSeriesEvent("E124", "nickel", 1),
 	ChallengeSeriesEvent("E260", "nfsdotcom"),
 	ChallengeSeriesEvent("E374", "gmac"),
 	ChallengeSeriesEvent("E501", "ce_ccx", 1),
-	ChallengeSeriesEvent("E298", "pinkslip_racer_024"),
-	ChallengeSeriesEvent("E230", "rose"),
-	//chase
+	ChallengeSeriesEvent("E298", "pinkslip_racer_024", 2),
+	ChallengeSeriesEvent("E654", "rose"),
 };
 
 ChallengeSeriesEvent* GetChallengeEvent(uint32_t hash) {
