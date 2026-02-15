@@ -23,27 +23,23 @@ bool bChallengeSeriesMode = false;
 #include "challengeseries.h"
 
 uint32_t PlayerCarType = 0;
-VehicleCustomizations PlayerCustomizations = {};
 ISimable* VehicleConstructHooked(Sim::Param params) {
 	DLLDirSetter _setdir;
 
 	auto vehicle = (VehicleParams*)params.mSource;
 	if (vehicle->mDriverClass == DRIVER_HUMAN) {
 		PlayerCarType = vehicle->mRideInfo->Type;
-		PlayerCustomizations = vehicle->mCustomization ? *vehicle->mCustomization : VehicleCustomizations();
 	}
 	if (vehicle->mDriverClass == DRIVER_RACER) {
 		static RideInfo info;
 		RideInfo::Init(&info, PlayerCarType, CarRenderUsage_AIRacer, 0, 0, 0, 0);
 		RideInfo::SetStockParts(&info);
-		//VehicleCustomizations::WriteTo(&PlayerCustomizations, &info);
 
 		// copy player car for all opponents
 		auto player = GetLocalPlayerVehicle();
 		vehicle->mPerformanceMatch = nullptr;
 		vehicle->mVehicleAttrib = Attrib::Instance(Attrib::FindCollection(Attrib::StringHash32("pvehicle"), player->GetVehicleKey()), 0);
 		vehicle->mRideInfo = &info;
-		//vehicle->mCustomization = &PlayerCustomizations;
 		vehicle->mCustomization = nullptr;
 		vehicle->mSkinKey = 0;
 		vehicle->mPresetKey = 0;
@@ -161,14 +157,13 @@ BOOL WINAPI DllMain(HINSTANCE, DWORD fdwReason, LPVOID) {
 			NyaHookLib::PatchRelative(NyaHookLib::CALL, 0x6424DD, &GetNumRacesHooked);
 			NyaHookLib::PatchRelative(NyaHookLib::CALL, 0x6424F7, &GetRaceKeyHooked);
 
-			// todo disable drafting
-			//NyaHookLib::Patch<uint8_t>(0x477155, 0xEB);
-			//NyaHookLib::Patch<uint8_t>(0x4773BF, 0xEB);
-			//NyaHookLib::Patch<uint8_t>(0x4773DF, 0xEB);
-			//NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x477440, 0x4775EB);
-			//NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x477615, 0x4776C8);
-			//NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x477706, 0x4778B3);
-			//NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x4771E0, 0x4773A5);
+			// disable drafting
+			NyaHookLib::Patch<uint8_t>(0x6FD1B8, 0xEB);
+			NyaHookLib::Patch<uint8_t>(0x73E9FC, 0xEB);
+			NyaHookLib::Patch<uint8_t>(0x734694, 0xEB);
+			NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x72ADB4, 0x72AF09);
+			NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x740BF1, 0x740E89);
+			NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x72AF82, 0x72B11D);
 
 			SetRacerAIEnabled(false);
 

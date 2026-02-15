@@ -43,7 +43,10 @@ public:
 
 		bPBGhostLoading = true;
 		tReplayGhost temp;
+		auto bak = bChallengeSeriesMode;
+		bChallengeSeriesMode = true;
 		LoadPB(&temp, sCarPreset, sEventName, GetLapCount(), 0, nullptr);
+		bChallengeSeriesMode = bak;
 		temp.aTicks.clear(); // just in case
 		PBGhost = temp;
 		bPBGhostLoading = false;
@@ -57,7 +60,10 @@ public:
 
 		bTargetGhostLoading = true;
 		tReplayGhost targetTime;
+		auto bak = bChallengeSeriesMode;
+		bChallengeSeriesMode = true;
 		auto times = CollectReplayGhosts(sCarPreset, sEventName, GetLapCount(), nullptr);
+		bChallengeSeriesMode = bak;
 		if (!times.empty()) {
 			times[0].aTicks.clear(); // just in case
 			targetTime = aTargetGhosts[nDifficulty] = times[0];
@@ -69,6 +75,7 @@ public:
 
 	void SetupEvent() {
 		if (TheGameFlowManager.CurrentGameFlowState != GAMEFLOW_STATE_RACING) return;
+		if (IGameStatus::mInstance->IsRacing()) return;
 
 		bChallengeSeriesMode = true;
 
