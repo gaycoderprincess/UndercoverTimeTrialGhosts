@@ -1,3 +1,14 @@
+int GetNumRacesHooked() {
+	return bChallengeSeriesMode ? 1 : 0;
+}
+
+uint32_t nCurrentEventKey;
+void* __thiscall GetRaceKeyHooked(Attrib::Instance* instance, uint32_t attributeKey, uint32_t index) {
+	static uint32_t key;
+	key = nCurrentEventKey;
+	return &key;
+}
+
 class ChallengeSeriesEvent {
 public:
 	std::string sEventName;
@@ -59,7 +70,10 @@ public:
 	void SetupEvent() {
 		if (TheGameFlowManager.CurrentGameFlowState != GAMEFLOW_STATE_RACING) return;
 
+		bChallengeSeriesMode = true;
+
 		auto race = GRaceDatabase::GetRaceFromHash(GRaceDatabase::mObj, Attrib::StringHash32(sEventName.c_str()));
+		nCurrentEventKey = race->GetCollectionKey();
 
 		auto custom = GRaceDatabase::AllocCustomRace(GRaceDatabase::mObj, race);
 		custom->mIndex->mNumLaps = GRaceParameters::GetIsLoopingRace(race) ? GetLapCount() : 1;
@@ -70,27 +84,44 @@ public:
 		//GRaceDatabase::mObj->SetStartupRace(custom, GRace::kRaceContext_QuickRace);
 		//GameFlowManager::LoadTrack(&TheGameFlowManager);
 
-		IGameStatus::mInstance->SetRoaming();
-		IGameStatus::mInstance->ToggleShortMissionIntroNIS(true);
-		auto eventKey = *(uint32_t*)Attrib::Instance::GetAttributePointer(custom->mRaceRecord, Attrib::StringHash32("Name"), 0);
-		GHub::StartEventFromKey(GHub::sCurrentHub, eventKey);
-		GHub::StartCurrentEvent(GHub::sCurrentHub);
-		IGameStatus::mInstance->EventLaunched();
-
 		/*IGameStatus::mInstance->SetRoaming();
+		IGameStatus::mInstance->ToggleShortMissionIntroNIS(true);
+		//auto eventKey = *(uint32_t*)Attrib::Instance::GetAttributePointer(race->mRaceRecord, Attrib::StringHash32("Name"), 0);
+		//auto eventKey = race->mRaceRecord->mCollection->mKey;
+		//auto eventKey = Attrib::StringHash32("race_bin_career/E007");
+		auto eventKey = GHub::GetEventKey(GHub::sCurrentHub, 0);
+		WriteLog(std::format("{:X}", eventKey));
+		auto event = GRaceDatabase::GetRaceFromKey(GRaceDatabase::mObj, eventKey);
+		WriteLog(std::format("{}", GRaceParameters::GetEventID(event)));
+		event->BlockUntilLoaded();
+		GHub::StartEventFromKey(GHub::sCurrentHub, eventKey);
+		GHub::sCurrentHub->mCurrentEventKey = eventKey;
+		GHub::sCurrentHub->mCurrentEventHash = event->GetEventHash();
+		GHub::sCurrentHub->mRequestedEventKey = eventKey;
+		GHub::sCurrentHub->mSelectedEventIndex = 0;
+		GHub::sCurrentHub->mCurrentEventType = event->GetEventType();
+		GHub::StartCurrentEvent(GHub::sCurrentHub);
+		GHub::sCurrentHub->SetupPlayerCar({0xFFFFFFFF}, 0);
+		GHub::sCurrentHub->UpdateCars();
+		//GEvent::Prepare(GEvent::sInstance);
+		IGameStatus::mInstance->EventLaunched();*/
+
+		IGameStatus::mInstance->SetRoaming();
 		IGameStatus::mInstance->ToggleShortMissionIntroNIS(true);
 		if (!custom->GetActivity()) {
 			GRaceCustom::CreateRaceActivity(custom);
 		}
 		if (custom->GetActivity()) {
 			GManager::ConnectRuntimeInstances(GManager::mObj);
+			GEvent::sInstance->mEventActivity = custom->GetActivity();
+			GEvent::Prepare(GEvent::sInstance);
 			GManager::StartRaceActivityFromInGame(GManager::mObj, custom);
 			IGameStatus::mInstance->EventLaunched();
 
 			//if (GRaceStatus::fObj) {
 			//	GRaceStatus::fObj->AddSimablePlayer(GetLocalPlayerSimable());
 			//}
-		}*/
+		}
 
 		//IGameStatus::mInstance->SetRoaming();
 		//IGameStatus::mInstance->ToggleShortMissionIntroNIS(true);
@@ -102,7 +133,7 @@ public:
 
 std::vector<ChallengeSeriesEvent> aNewChallengeSeries = {
 	ChallengeSeriesEvent("E007", "ce_240sx", 2),
-	//ChallengeSeriesEvent("race_bin_career/E007", "ce_240sx", 2),
+	ChallengeSeriesEvent("E650", "racer_170", 2),
 };
 
 ChallengeSeriesEvent* GetChallengeEvent(uint32_t hash) {

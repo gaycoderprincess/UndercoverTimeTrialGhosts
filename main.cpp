@@ -12,7 +12,7 @@
 #include "chloemenulib.h"
 
 bool bCareerMode = false;
-bool bChallengeSeriesMode = true;
+bool bChallengeSeriesMode = false;
 
 #include "util.h"
 #include "d3dhook.h"
@@ -46,11 +46,18 @@ ISimable* VehicleConstructHooked(Sim::Param params) {
 	return PVehicle::Construct(params);
 }
 
-auto OnEventFinished_orig = (void(*)(ISimable*))nullptr;
-void __thiscall OnEventFinished(ISimable* a1) {
-	OnEventFinished_orig(a1);
+auto OnEventFinished_orig = (void(__thiscall*)(GRacerInfo*, GRacerInfo::FinishReason))nullptr;
+void __thiscall OnEventFinished(GRacerInfo* a1, GRacerInfo::FinishReason reason) {
+	OnEventFinished_orig(a1, reason);
 
-	if (a1 == GetLocalPlayerSimable()) {
+	if (!bChallengeSeriesMode) return;
+
+	bool finished = false;
+	if (reason == GRacerInfo::kReason_CrossedFinish) finished = true;
+	if (reason == GRacerInfo::kReason_Completed) finished = true;
+	if (reason == GRacerInfo::kReason_ChallengeCompleted) finished = true;
+
+	if (finished && a1 == GetRacerInfoFromHandle(GetLocalPlayerSimable())) {
 		DLLDirSetter _setdir;
 		OnFinishRace();
 
@@ -131,13 +138,18 @@ BOOL WINAPI DllMain(HINSTANCE, DWORD fdwReason, LPVOID) {
 				//}
 			});
 
-			OnEventFinished_orig = (void(*)(ISimable*))(*(uint32_t*)(0xBC0325 + 1));
-			NyaHookLib::Patch(0xBC0325 + 1, &OnEventFinished);
+			OnEventFinished_orig = (void(__thiscall*)(GRacerInfo*, GRacerInfo::FinishReason))(*(uint32_t*)(0x6651F1));
+			NyaHookLib::Patch(0x6651F1, &OnEventFinished);
+			NyaHookLib::PatchRelative(NyaHookLib::CALL, 0x662456, &OnEventFinished);
+			NyaHookLib::PatchRelative(NyaHookLib::CALL, 0x62DB3B, &OnEventFinished);
 
 			OnRestartRace_orig = (void(__thiscall*)(void*))NyaHookLib::PatchRelative(NyaHookLib::CALL, 0x563D6B, &OnRestartRace);
 			NyaHookLib::PatchRelative(NyaHookLib::CALL, 0x5A6EFA, &OnRestartRace);
 
 			NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x4553C7, 0x4553D9); // disable traffic
+
+			NyaHookLib::PatchRelative(NyaHookLib::CALL, 0x6424DD, &GetNumRacesHooked);
+			NyaHookLib::PatchRelative(NyaHookLib::CALL, 0x6424F7, &GetRaceKeyHooked);
 
 			// todo disable drafting
 			//NyaHookLib::Patch<uint8_t>(0x477155, 0xEB);
