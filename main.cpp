@@ -150,10 +150,10 @@ BOOL WINAPI DllMain(HINSTANCE, DWORD fdwReason, LPVOID) {
 				ApplyVerificationPatches();
 
 				*(void**)0xDE6F30 = (void*)&VehicleConstructHooked;
-				//if (GetModuleHandleA("NFSUCExtraOptions.asi") || std::filesystem::exists("NFSUCExtraOptionsSettings.ini") || std::filesystem::exists("scripts/NFSUCExtraOptionsSettings.ini")) {
-				//	MessageBoxA(nullptr, "Potential unfair advantage detected! Please remove NFSUCExtraOptions from your game before using this mod.", "nya?!~", MB_ICONERROR);
-				//	exit(0);
-				//}
+				if (GetModuleHandleA("ZMenuUndercover.asi") || GetModuleHandleA("assimp-vc141-mt.dll")) {
+					MessageBoxA(nullptr, "Potential unfair advantage detected! Please remove ZMenuUndercover from your game before using this mod.", "nya?!~", MB_ICONERROR);
+					exit(0);
+				}
 			});
 
 			OnEventFinished_orig = (void(__thiscall*)(GRacerInfo*, GRacerInfo::FinishReason))(*(uint32_t*)(0x6651F1));
