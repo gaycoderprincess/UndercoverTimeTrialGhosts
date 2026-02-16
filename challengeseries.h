@@ -177,6 +177,7 @@ std::vector<ChallengeSeriesEvent> aVanillaChallengeSeries = {
 	ChallengeSeriesEvent("E501", "ce_ccx", 1),
 	ChallengeSeriesEvent("E298", "pinkslip_racer_024", 2),
 	ChallengeSeriesEvent("E654", "rose"),
+	ChallengeSeriesEvent("E016", "sedan", 1),
 };
 
 std::vector<ChallengeSeriesEvent> aReformedChallengeSeries = {
@@ -194,6 +195,8 @@ std::vector<ChallengeSeriesEvent> aReformedChallengeSeries = {
 	ChallengeSeriesEvent("E501", "bonus_rose", 1),
 	ChallengeSeriesEvent("E298", "m28", 2),
 	ChallengeSeriesEvent("E654", "bonus_370z"),
+	//ChallengeSeriesEvent("E112", ""),
+	ChallengeSeriesEvent("E016", "sedan", 2),
 	// e124_pinkslip4 supra
 	// starter_civic
 };
@@ -225,6 +228,10 @@ void OnChallengeSeriesEventPB() {
 
 ChallengeSeriesEvent* pEventToStart = nullptr;
 void ChallengeSeriesMenu() {
+	if (gUndercoverModData.bReformedInstalled) {
+		aNewChallengeSeries = &aReformedChallengeSeries;
+	}
+
 	for (auto& event : *aNewChallengeSeries) {
 		auto pb = event.GetPBGhost();
 		auto target = event.GetTargetGhost();

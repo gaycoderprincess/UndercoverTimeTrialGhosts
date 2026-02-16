@@ -156,6 +156,16 @@ BOOL WINAPI DllMain(HINSTANCE, DWORD fdwReason, LPVOID) {
 				gUndercoverModData.Check();
 
 				*(void**)0xDE6F30 = (void*)&VehicleConstructHooked;
+
+				// always use the player classes for cars
+				*(uint32_t*)0xDE9D84 = 0x73F830; // ChassisSimple
+				*(uint32_t*)0xDEA700 = 0x73F830; // ChassisTraffic
+				*(uint32_t*)0xDEA6B4 = 0x73EC60; // Engine
+				*(uint32_t*)0xDEA7C0 = 0x73EC60; // EngineTraffic
+				*(uint32_t*)0xDEA868 = 0x73F0C0; // DrawTraffic
+				*(uint32_t*)0xDEA838 = 0x73CC70; // DamageVehicle
+				*(uint32_t*)0xDEA814 = 0x736FC0; // SoundTraffic
+
 				if (GetModuleHandleA("ZMenuUndercover.asi") || GetModuleHandleA("assimp-vc141-mt.dll")) {
 					MessageBoxA(nullptr, "Potential unfair advantage detected! Please remove ZMenuUndercover from your game before using this mod.", "nya?!~", MB_ICONERROR);
 					exit(0);
