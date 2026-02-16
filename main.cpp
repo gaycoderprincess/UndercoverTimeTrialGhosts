@@ -124,6 +124,10 @@ float ResetSpeedHooked(float a1) {
 	return std::abs(a1);
 }
 
+void __thiscall ResetableHooked(void* pThis, uint32_t* out, int* type) {
+	*out = Attrib::StringHash32("ResetCar");
+}
+
 BOOL WINAPI DllMain(HINSTANCE, DWORD fdwReason, LPVOID) {
 	switch( fdwReason ) {
 		case DLL_PROCESS_ATTACH: {
@@ -171,6 +175,8 @@ BOOL WINAPI DllMain(HINSTANCE, DWORD fdwReason, LPVOID) {
 					exit(0);
 				}
 			});
+
+			NyaHookLib::PatchRelative(NyaHookLib::CALL, 0x6F0987, &ResetableHooked);
 
 			OnEventFinished_orig = (void(__thiscall*)(GRacerInfo*, GRacerInfo::FinishReason))(*(uint32_t*)(0x6651F1));
 			NyaHookLib::Patch(0x6651F1, &OnEventFinished);
