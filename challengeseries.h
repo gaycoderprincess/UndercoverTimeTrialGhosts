@@ -96,6 +96,7 @@ public:
 
 	void SetupEvent() {
 		if (TheGameFlowManager.CurrentGameFlowState != GAMEFLOW_STATE_RACING) return;
+		if (IsInNIS()) return;
 
 		bChallengeSeriesMode = true;
 
