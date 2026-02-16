@@ -181,7 +181,6 @@ NyaMat4x4 WorldToRenderMatrix(NyaMat4x4 world) {
 	return out;
 }
 
-// todo
 Camera* GetLocalPlayerCamera() {
 	return eViews[EVIEW_PLAYER1].pCamera;
 }
