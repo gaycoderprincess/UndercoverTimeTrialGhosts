@@ -237,6 +237,9 @@ void ChallengeSeriesMenu() {
 		auto target = event.GetTargetGhost();
 		auto optionName = event.sEventName; // todo
 
+		pb.nFinishTime *= (120.0 / 144.0);
+		target.nFinishTime *= (120.0 / 144.0);
+
 		auto targetName = GetRealPlayerName(target.sPlayerName);
 		auto targetTime = std::format("Target Time - {} ({})", FormatTime(target.nFinishTime), targetName);
 
