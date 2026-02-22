@@ -153,11 +153,20 @@ BOOL WINAPI DllMain(HINSTANCE, DWORD fdwReason, LPVOID) {
 				NyaHooks::D3DEndSceneHook::aFunctions.push_back(D3DHookMain);
 				NyaHooks::D3DResetHook::aFunctions.push_back(OnD3DReset);
 
-				NyaHookLib::Patch<double>(0xBE4208, 1.0 / 120.0); // set sim framerate
-				NyaHookLib::Patch<float>(0xC23F94, 1.0 / 120.0); // set sim max framerate
+				gUndercoverModData.Check();
+
+				static double dSimFramerate = 1.0 / 120.0;
+				// too late to fix this now
+				if (gUndercoverModData.bReformedInstalled) {
+					dSimFramerate = 1.0 / 144.0;
+				}
+				//static double fSimFramerate = dSimFramerate;
+				//NyaHookLib::Patch(0x679750 + 4, &dSimFramerate);
+				//NyaHookLib::Patch(0x7B89E0 + 4, &fSimFramerate);
+				NyaHookLib::Patch(0x7BFB19 + 4, &dSimFramerate); // affects sim framerate
+				NyaHookLib::Patch(0x7B8A07 + 4, &dSimFramerate); // sim max framerate
 
 				ApplyVerificationPatches();
-				gUndercoverModData.Check();
 
 				*(void**)0xDE6F30 = (void*)&VehicleConstructHooked;
 
