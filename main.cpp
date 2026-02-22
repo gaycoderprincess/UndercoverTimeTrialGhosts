@@ -160,10 +160,7 @@ BOOL WINAPI DllMain(HINSTANCE, DWORD fdwReason, LPVOID) {
 				if (gUndercoverModData.bReformedInstalled) {
 					dSimFramerate = 1.0 / 144.0;
 				}
-				//static double fSimFramerate = dSimFramerate;
-				//NyaHookLib::Patch(0x679750 + 4, &dSimFramerate);
-				//NyaHookLib::Patch(0x7B89E0 + 4, &fSimFramerate);
-				NyaHookLib::Patch(0x7BFB19 + 4, &dSimFramerate); // affects sim framerate
+				NyaHookLib::Patch(0x7BFB19 + 4, &dSimFramerate); // sim framerate
 				NyaHookLib::Patch(0x7B8A07 + 4, &dSimFramerate); // sim max framerate
 
 				ApplyVerificationPatches();
