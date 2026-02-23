@@ -270,7 +270,7 @@ void ChallengeSeriesMenu() {
 }
 
 const char* __thiscall GetPresetRideHooked(GRaceParameters* pThis) {
-	auto event = GetChallengeEvent(pThis->GetEventID(pThis));
+	auto event = GetChallengeEvent(GRaceParameters::GetEventID(pThis));
 	if (!event) return nullptr;
 	return event->sCarPreset.c_str();
 }
