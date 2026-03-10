@@ -168,7 +168,7 @@ BOOL WINAPI DllMain(HINSTANCE, DWORD fdwReason, LPVOID) {
 				*(void**)0xDE6F30 = (void*)&VehicleConstructHooked;
 
 				// always use the player classes for cars
-				*(uint32_t*)0xDE9D84 = 0x73F830; // ChassisSimple
+				//*(uint32_t*)0xDE9D84 = 0x73F830; // ChassisSimple
 				*(uint32_t*)0xDEA700 = 0x73F830; // ChassisTraffic
 				*(uint32_t*)0xDEA6B4 = 0x73EC60; // Engine
 				*(uint32_t*)0xDEA7C0 = 0x73EC60; // EngineTraffic
